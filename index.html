@@ -21,25 +21,13 @@
     .grid-item p:last-child { font-size: 12px; color: #777; }
     .cta-card { background: #fff; border: 0.5px solid #ddd; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; text-align: center; }
     .cta-card p { font-size: 15px; color: #555; margin-bottom: 1.25rem; }
-    .widget-wrapper { display: flex; justify-content: center; align-items: center; margin-top: 0.5rem; }
+    .widget-wrapper { display: flex; justify-content: center; align-items: center; margin-top: 0.5rem; width: 100%; }
     .footer { text-align: center; font-size: 12px; color: #888; padding: 1rem 0; }
 
-    /* Fix vapi-widget popup: centered and smaller */
+    /* Force vapi-widget to full width so button text centers */
     vapi-widget {
-      --vapi-widget-width: min(360px, 92vw);
-      --vapi-widget-height: min(420px, 75vh);
-    }
-
-    /* Target the popup panel inside the widget shadow DOM via fixed positioning override */
-    vapi-widget::part(panel) {
-      width: min(360px, 92vw) !important;
-      height: min(420px, 75vh) !important;
-      left: 50% !important;
-      right: auto !important;
-      bottom: auto !important;
-      top: 50% !important;
-      transform: translate(-50%, -50%) !important;
-      position: fixed !important;
+      width: 100% !important;
+      display: block !important;
     }
   </style>
 </head>
@@ -71,7 +59,7 @@
         assistant-id="bf88cd90-5e4f-4140-8794-9166a3dd08e0"
         mode="voice"
         theme="light"
-        size="compact"
+        size="full"
         accent-color="#185FA5"
         button-base-color="#185FA5"
         button-accent-color="#FFFFFF"
@@ -88,25 +76,6 @@
 </div>
 
 <script src="https://unpkg.com/@vapi-ai/client-sdk-react/dist/embed/widget.umd.js" async type="text/javascript"></script>
-
-<script>
-  /* After widget loads, try to resize and center the popup panel via JS */
-  window.addEventListener('load', function() {
-    setTimeout(function() {
-      var widget = document.querySelector('vapi-widget');
-      if (!widget || !widget.shadowRoot) return;
-
-      /* Find all divs and try to identify the popup panel */
-      var allDivs = widget.shadowRoot.querySelectorAll('div');
-      allDivs.forEach(function(div) {
-        var style = window.getComputedStyle(div);
-        if (style.position === 'fixed' || div.offsetHeight > 200) {
-          div.style.cssText += ';width:min(360px,92vw)!important;height:min(420px,75vh)!important;left:50%!important;right:auto!important;bottom:auto!important;top:50%!important;transform:translate(-50%,-50%)!important;position:fixed!important;';
-        }
-      });
-    }, 2000);
-  });
-</script>
 
 </body>
 </html>
