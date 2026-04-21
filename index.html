@@ -22,8 +22,6 @@
     .cta-card { background: #fff; border: 0.5px solid #ddd; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; text-align: center; }
     .cta-card p { font-size: 15px; color: #555; margin-bottom: 1.25rem; }
     .footer { text-align: center; font-size: 12px; color: #888; padding: 1rem 0 2rem; }
-
-    /* Centered Talk to Mary button */
     .mary-launch {
       padding: 14px 32px;
       border-radius: 8px;
@@ -39,8 +37,6 @@
       transition: background 0.2s;
     }
     .mary-launch:hover { background: #0c447c; }
-
-    /* Backdrop */
     .mary-backdrop {
       position: fixed;
       inset: 0;
@@ -50,8 +46,6 @@
       justify-content: center;
       z-index: 9999;
     }
-
-    /* Modal */
     .mary-modal {
       width: min(380px, 92vw);
       height: min(420px, 75vh);
@@ -60,6 +54,8 @@
       border-radius: 16px;
       overflow: hidden;
       position: relative;
+      display: flex;
+      flex-direction: column;
     }
     .mary-modal-header {
       height: 48px;
@@ -71,6 +67,7 @@
       background: rgba(255,255,255,0.06);
       font-size: 15px;
       font-weight: 500;
+      flex-shrink: 0;
     }
     .mary-close {
       background: transparent;
@@ -81,9 +78,50 @@
       padding: 6px 10px;
       line-height: 1;
     }
-    #mary-widget-mount {
-      height: calc(100% - 48px);
+    .mary-modal-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      gap: 1rem;
     }
+    .mary-status {
+      color: #aaa;
+      font-size: 14px;
+      text-align: center;
+    }
+    .mary-mic {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mary-mic.active {
+      background: rgba(24, 95, 165, 0.4);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(24,95,165,0.5); }
+      70% { box-shadow: 0 0 0 16px rgba(24,95,165,0); }
+      100% { box-shadow: 0 0 0 0 rgba(24,95,165,0); }
+    }
+    .mary-end-btn {
+      padding: 12px 28px;
+      border-radius: 8px;
+      border: none;
+      background: #a32d2d;
+      color: white;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      display: none;
+    }
+    .mary-end-btn:hover { background: #791f1f; }
     .mic-note { font-size: 12px; color: #888; margin-top: 0.75rem; }
   </style>
 </head>
@@ -91,7 +129,6 @@
 <div class="container">
 
   <div class="hero">
-    <!-- Replace mary.jpg with your actual image filename -->
     <img src="mary.jpg" alt="Mary — Solar Energy Consultant" class="avatar" />
     <h1>Mary — AI Consultant</h1>
     <p class="subtitle">Solar Energy Specialist</p>
@@ -128,33 +165,69 @@
       <div>Mary — Solar Energy Consultant</div>
       <button id="maryClose" class="mary-close">✕</button>
     </div>
-    <div id="mary-widget-mount"></div>
+    <div class="mary-modal-body">
+      <div class="mary-mic" id="maryMic">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </div>
+      <p class="mary-status" id="maryStatus">Connecting to Mary...</p>
+      <button class="mary-end-btn" id="maryEndBtn">End Call</button>
+    </div>
   </div>
 </div>
 
-<!-- Vapi Web SDK -->
-<script type="module">
-  import Vapi from "https://cdn.jsdelivr.net/npm/@vapi-ai/web@latest/+esm";
-  const vapi = new Vapi("298b9886-0d93-45ba-a4b3-efa45a584cdd");
-  const assistantId = "bf88cd90-5e4f-4140-8794-9166a3dd08e0";
-  const backdrop = document.getElementById("maryBackdrop");
-  const startBtn = document.getElementById("maryStart");
-  const closeBtn = document.getElementById("maryClose");
+<!-- Vapi SDK loaded as regular script (not module) -->
+<script src="https://cdn.jsdelivr.net/npm/@vapi-ai/web@latest/dist/vapi.umd.cjs"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var vapi = new Vapi("298b9886-0d93-45ba-a4b3-efa45a584cdd");
+    var assistantId = "bf88cd90-5e4f-4140-8794-9166a3dd08e0";
 
-  function openModal() { backdrop.style.display = "flex"; }
-  function closeModal() { backdrop.style.display = "none"; }
+    var backdrop = document.getElementById("maryBackdrop");
+    var startBtn = document.getElementById("maryStart");
+    var closeBtn = document.getElementById("maryClose");
+    var endBtn = document.getElementById("maryEndBtn");
+    var status = document.getElementById("maryStatus");
+    var mic = document.getElementById("maryMic");
 
-  startBtn.addEventListener("click", async () => {
-    openModal();
-    await vapi.start(assistantId);
+    function openModal() { backdrop.style.display = "flex"; }
+    function closeModal() { backdrop.style.display = "none"; }
+
+    startBtn.addEventListener("click", function () {
+      openModal();
+      status.textContent = "Connecting to Mary...";
+      mic.classList.remove("active");
+      endBtn.style.display = "none";
+      vapi.start(assistantId);
+    });
+
+    closeBtn.addEventListener("click", function () {
+      vapi.stop();
+      closeModal();
+    });
+
+    endBtn.addEventListener("click", function () {
+      vapi.stop();
+      closeModal();
+    });
+
+    vapi.on("call-start", function () {
+      status.textContent = "Connected — Mary is listening...";
+      mic.classList.add("active");
+      endBtn.style.display = "inline-block";
+    });
+
+    vapi.on("call-end", function () {
+      closeModal();
+      mic.classList.remove("active");
+    });
+
+    vapi.on("error", function (e) {
+      status.textContent = "Connection error. Please try again.";
+      mic.classList.remove("active");
+      endBtn.style.display = "none";
+      console.error(e);
+    });
   });
-
-  closeBtn.addEventListener("click", async () => {
-    await vapi.stop();
-    closeModal();
-  });
-
-  vapi.on("call-end", () => closeModal());
 </script>
 
 </body>
