@@ -6,19 +6,7 @@
   <title>Talk to Mary — Solar Energy Consultant</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    /* CHANGED: center the whole page content vertically + horizontally */
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f5f5f3;
-      color: #1a1a1a;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;          /* was: flex-start */
-      justify-content: center;
-      padding: 2rem 1rem;
-    }
-
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f3; color: #1a1a1a; min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 2rem 1rem; }
     .container { max-width: 640px; width: 100%; }
     .hero { text-align: center; padding: 3rem 1rem 2rem; }
     .avatar { width: 80px; height: 80px; border-radius: 50%; background: #faeeda; color: #854F0B; font-size: 28px; font-weight: 500; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; }
@@ -36,10 +24,22 @@
     .widget-wrapper { display: flex; justify-content: center; align-items: center; margin-top: 0.5rem; }
     .footer { text-align: center; font-size: 12px; color: #888; padding: 1rem 0; }
 
-    /* CHANGED: make the popup/window smaller and centered */
+    /* Fix vapi-widget popup: centered and smaller */
     vapi-widget {
-      --vapi-widget-width: 340px;   /* smaller window width */
-      --vapi-widget-height: 420px;  /* smaller window height */
+      --vapi-widget-width: min(360px, 92vw);
+      --vapi-widget-height: min(420px, 75vh);
+    }
+
+    /* Target the popup panel inside the widget shadow DOM via fixed positioning override */
+    vapi-widget::part(panel) {
+      width: min(360px, 92vw) !important;
+      height: min(420px, 75vh) !important;
+      left: 50% !important;
+      right: auto !important;
+      bottom: auto !important;
+      top: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      position: fixed !important;
     }
   </style>
 </head>
@@ -88,5 +88,25 @@
 </div>
 
 <script src="https://unpkg.com/@vapi-ai/client-sdk-react/dist/embed/widget.umd.js" async type="text/javascript"></script>
+
+<script>
+  /* After widget loads, try to resize and center the popup panel via JS */
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      var widget = document.querySelector('vapi-widget');
+      if (!widget || !widget.shadowRoot) return;
+
+      /* Find all divs and try to identify the popup panel */
+      var allDivs = widget.shadowRoot.querySelectorAll('div');
+      allDivs.forEach(function(div) {
+        var style = window.getComputedStyle(div);
+        if (style.position === 'fixed' || div.offsetHeight > 200) {
+          div.style.cssText += ';width:min(360px,92vw)!important;height:min(420px,75vh)!important;left:50%!important;right:auto!important;bottom:auto!important;top:50%!important;transform:translate(-50%,-50%)!important;position:fixed!important;';
+        }
+      });
+    }, 2000);
+  });
+</script>
+
 </body>
 </html>
