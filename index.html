@@ -21,8 +21,24 @@
     .grid-item p:last-child { font-size: 12px; color: #777; }
     .cta-card { background: #fff; border: 0.5px solid #ddd; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; text-align: center; }
     .cta-card p { font-size: 15px; color: #555; margin-bottom: 1.25rem; }
-    .widget-wrapper { display: flex; justify-content: center; align-items: center; margin-top: 0.5rem; }
-    .footer { text-align: center; font-size: 12px; color: #888; padding: 1rem 0; }
+    .footer { text-align: center; font-size: 12px; color: #888; padding: 1rem 0 3rem; }
+
+    /* Force Vapi widget to center bottom instead of bottom-right */
+    vapi-widget {
+      --vapi-btn-position-bottom: 20px;
+      --vapi-btn-position-right: 50%;
+      --vapi-btn-transform: translateX(50%);
+    }
+
+    /* Override Vapi widget positioning via its shadow DOM container */
+    vapi-widget::part(container) {
+      left: 50% !important;
+      right: auto !important;
+      transform: translateX(-50%) !important;
+      bottom: 20px !important;
+      max-width: 320px !important;
+      width: 90vw !important;
+    }
   </style>
 </head>
 <body>
@@ -47,29 +63,50 @@
 
   <div class="cta-card">
     <p>Unbiased consultation designed to give you clarity.</p>
-    <div class="widget-wrapper">
-      <vapi-widget
-        public-key="298b9886-0d93-45ba-a4b3-efa45a584cdd"
-        assistant-id="bf88cd90-5e4f-4140-8794-9166a3dd08e0"
-        mode="voice"
-        theme="light"
-        size="compact"
-        accent-color="#185FA5"
-        button-base-color="#185FA5"
-        button-accent-color="#FFFFFF"
-        main-label="Talk with Mary"
-        start-button-text="Start Consultation"
-        end-button-text="End Call"
-        empty-voice-message="Click the button below to start your free solar consultation"
-      ></vapi-widget>
-    </div>
+    <p style="font-size: 13px; color: #999; margin-top: -0.5rem;">Click the button at the bottom of the screen to start</p>
   </div>
 
   <div class="footer">Powered by Vapi AI &nbsp;·&nbsp; Mary AI Consulting</div>
 
 </div>
 
+<!-- Vapi Widget -->
+<vapi-widget
+  public-key="298b9886-0d93-45ba-a4b3-efa45a584cdd"
+  assistant-id="bf88cd90-5e4f-4140-8794-9166a3dd08e0"
+  mode="voice"
+  theme="light"
+  size="compact"
+  position="bottom-right"
+  accent-color="#185FA5"
+  button-base-color="#185FA5"
+  button-accent-color="#FFFFFF"
+  main-label="Talk with Mary"
+  start-button-text="Start Consultation"
+  end-button-text="End Call"
+  empty-voice-message="Click the button below to start your free solar consultation"
+></vapi-widget>
+
 <script src="https://unpkg.com/@vapi-ai/client-sdk-react/dist/embed/widget.umd.js" async type="text/javascript"></script>
+
+<!-- Try to center the widget via JS after it loads -->
+<script>
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const host = document.querySelector('vapi-widget');
+      if (host && host.shadowRoot) {
+        const container = host.shadowRoot.querySelector('[class*="container"], [class*="widget"], div');
+        if (container) {
+          container.style.right = 'auto';
+          container.style.left = '50%';
+          container.style.transform = 'translateX(-50%)';
+          container.style.maxWidth = '320px';
+          container.style.width = '90vw';
+        }
+      }
+    }, 1500);
+  });
+</script>
 
 </body>
 </html>
