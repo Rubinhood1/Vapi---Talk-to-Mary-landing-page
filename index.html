@@ -52,7 +52,7 @@
 
   <div class="cta-card">
     <p>Unbiased consultation designed to give you clarity.</p>
-    <button class="talk-btn" id="talkBtn" onclick="toggleCall()">
+    <button class="talk-btn" id="talkBtn">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
       Talk to Mary
     </button>
@@ -64,44 +64,47 @@
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@vapi-ai/web/dist/vapi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@vapi-ai/web@latest/dist/vapi.umd.cjs"></script>
 <script>
-  const vapi = new Vapi("298b9886-0d93-45ba-a4b3-efa45a584cdd");
+  let vapi;
+  let callActive = false;
   const btn = document.getElementById("talkBtn");
   const status = document.getElementById("statusMsg");
-  let callActive = false;
 
-  function toggleCall() {
-    if (!callActive) {
-      status.textContent = "Connecting to Mary...";
-      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> End Call';
+  const micIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+
+  window.addEventListener("load", () => {
+    vapi = new Vapi("298b9886-0d93-45ba-a4b3-efa45a584cdd");
+
+    vapi.on("call-start", () => {
+      callActive = true;
+      status.textContent = "Connected — Mary is listening...";
+      btn.innerHTML = micIcon + " End Call";
       btn.classList.add("active");
-      vapi.start("bf88cd90-5e4f-4140-8794-9166a3dd08e0");
-    } else {
-      vapi.stop();
-      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Talk to Mary';
-      btn.classList.remove("active");
-      status.textContent = "";
+    });
+
+    vapi.on("call-end", () => {
       callActive = false;
-    }
-  }
+      status.textContent = "Call ended. Click to start a new session.";
+      btn.innerHTML = micIcon + " Talk to Mary";
+      btn.classList.remove("active");
+    });
 
-  vapi.on("call-start", () => {
-    callActive = true;
-    status.textContent = "Connected — Mary is listening...";
-  });
+    vapi.on("error", (e) => {
+      console.error(e);
+      status.textContent = "Connection error. Please try again.";
+      btn.classList.remove("active");
+      callActive = false;
+    });
 
-  vapi.on("call-end", () => {
-    callActive = false;
-    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Talk to Mary';
-    btn.classList.remove("active");
-    status.textContent = "Call ended. Click to start a new session.";
-  });
-
-  vapi.on("error", (e) => {
-    status.textContent = "Connection error. Please try again.";
-    btn.classList.remove("active");
-    callActive = false;
+    btn.addEventListener("click", async () => {
+      if (!callActive) {
+        status.textContent = "Connecting to Mary...";
+        await vapi.start("bf88cd90-5e4f-4140-8794-9166a3dd08e0");
+      } else {
+        vapi.stop();
+      }
+    });
   });
 </script>
 
